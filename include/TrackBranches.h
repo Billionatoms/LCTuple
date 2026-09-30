@@ -61,11 +61,23 @@ private:
   float _trzze[ LCT_TRACK_MAX ]  {} ;  // z0 at IP state
   float _trphi[ LCT_TRACK_MAX ]  {} ;  // phi at IP state
   //float _trcov[ LCT_TRACK_MAX ] [15]  {} ; // covariance matrix at IP state (i.e. cov)
-  float _trk_sigmal0[ LCT_TRACK_MAX ]  {} ;      // sigma L0: cov[0][0]   
-  float _trk_sigmal1[ LCT_TRACK_MAX ]  {} ;      // sigma L1: cov[1][1]  
-  float _trk_sigmaphi[ LCT_TRACK_MAX ]  {} ;     // sigma phi: cov[2][2]
-  float _trk_sigmatheta[ LCT_TRACK_MAX ]  {} ;   // sigma theta: cov[3][3]
-  float _trk_sigmaqoverp[ LCT_TRACK_MAX ]  {} ;  // sigma qOverp: cov[4][4]
+  /* Variances of the LCIO track parameters at the AtIP track state.
+   * The packed-index arithmetic below was always right (0,2,5,9,14 are the
+   * lower-triangle diagonals); what was wrong were the NAMES: they assumed the
+   * ATLAS/ACTS parameter order ( l0, l1, phi, theta, q/p ) whereas LCIO uses
+   * ( d0, phi, omega, z0, tanLambda ) -- EVENT/TrackState.h:72-76. So the branch
+   * called trk_sigmal1 was var(phi), trk_sigmaphi was var(omega), trk_sigmatheta
+   * was var(z0) and trk_sigmaqoverp was var(tanLambda).
+   * Note theta and q/p are NOT LCIO track parameters: their variances require
+   * Jacobian propagation from omega and tanLambda and cannot be read off a
+   * single element, which is why those two branches are gone rather than fixed.
+   * These are VARIANCES, not standard deviations.
+   */
+  float _trk_varD0[ LCT_TRACK_MAX ]  {} ;         // cov[ 0] var(d0)        [mm^2]
+  float _trk_varPhi[ LCT_TRACK_MAX ]  {} ;        // cov[ 2] var(phi)       [rad^2]
+  float _trk_varOmega[ LCT_TRACK_MAX ]  {} ;      // cov[ 5] var(omega)     [1/mm^2]
+  float _trk_varZ0[ LCT_TRACK_MAX ]  {} ;         // cov[ 9] var(z0)        [mm^2]
+  float _trk_varTanLambda[ LCT_TRACK_MAX ]  {} ;  // cov[14] var(tanLambda) [-]
 
   // track states parameters
   int   _ntrst  {} ;                   // total number of track states  

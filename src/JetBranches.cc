@@ -36,6 +36,14 @@
 
 using namespace lcio;
 
+// The per-jet daughter branches declare their second dimension as the literal
+// "200" in the ROOT leaflist strings below, while the arrays are dimensioned
+// with LCT_JET_PARTICLES_MAX. Keep the two in step - if the macro is ever
+// changed, the leaflists must be changed with it or ROOT will read past the
+// end of the arrays.
+static_assert( LCT_JET_PARTICLES_MAX == 200 ,
+               "LCT_JET_PARTICLES_MAX changed: update the [200] leaflist strings in JetBranches::initBranches" ) ;
+
 /* #####   FUNCTION DEFINITIONS  -  EXPORTED FUNCTIONS   ############################ */
 
 /* 
@@ -107,8 +115,21 @@ void JetBranches::initBranches( TTree* tree, const std::string& pre){
           tree->Branch( (pre+"daughters_trackOmega").c_str(), _daughters_trackOmega , (pre+"daughters_trackOmega["+pre+"njet][200]/F").c_str() ) ;
           tree->Branch( (pre+"daughters_trackZ0").c_str(), _daughters_trackZ0 , (pre+"daughters_trackZ0["+pre+"njet][200]/F").c_str() ) ;
           tree->Branch( (pre+"daughters_trackTanLambda").c_str(), _daughters_trackTanLambda , (pre+"daughters_trackTanLambda["+pre+"njet][200]/F").c_str() ) ;
-          tree->Branch( (pre+"daughters_trackSigmaD0").c_str(), _daughters_trackSigmaD0 , (pre+"daughters_trackSigmaD0["+pre+"njet][200]/F").c_str() ) ;
-          tree->Branch( (pre+"daughters_trackSigmaZ0").c_str(), _daughters_trackSigmaZ0 , (pre+"daughters_trackSigmaZ0["+pre+"njet][200]/F").c_str() ) ;
+          // Variances (NOT sigmas) of the five LCIO track parameters - see JetBranches.h
+          tree->Branch( (pre+"daughters_trackVarD0").c_str(), _daughters_trackVarD0 , (pre+"daughters_trackVarD0["+pre+"njet][200]/F").c_str() ) ;
+          tree->Branch( (pre+"daughters_trackVarPhi").c_str(), _daughters_trackVarPhi , (pre+"daughters_trackVarPhi["+pre+"njet][200]/F").c_str() ) ;
+          tree->Branch( (pre+"daughters_trackVarOmega").c_str(), _daughters_trackVarOmega , (pre+"daughters_trackVarOmega["+pre+"njet][200]/F").c_str() ) ;
+          tree->Branch( (pre+"daughters_trackVarZ0").c_str(), _daughters_trackVarZ0 , (pre+"daughters_trackVarZ0["+pre+"njet][200]/F").c_str() ) ;
+          tree->Branch( (pre+"daughters_trackVarTanLambda").c_str(), _daughters_trackVarTanLambda , (pre+"daughters_trackVarTanLambda["+pre+"njet][200]/F").c_str() ) ;
+
+          // Diagnostic branches - only when JetCollectionDaughtersCovariance is set
+          if (_writeDaughtersCovariance) {
+             tree->Branch( (pre+"ndaughters_stored").c_str(), _ndaughters_stored , (pre+"ndaughters_stored["+pre+"njet]/I").c_str() ) ;
+             tree->Branch( (pre+"daughters_trackCov").c_str(), _daughters_trackCov , (pre+"daughters_trackCov["+pre+"njet][200][15]/F").c_str() ) ;
+             tree->Branch( (pre+"daughters_trackRefX").c_str(), _daughters_trackRefX , (pre+"daughters_trackRefX["+pre+"njet][200]/F").c_str() ) ;
+             tree->Branch( (pre+"daughters_trackRefY").c_str(), _daughters_trackRefY , (pre+"daughters_trackRefY["+pre+"njet][200]/F").c_str() ) ;
+             tree->Branch( (pre+"daughters_trackRefZ").c_str(), _daughters_trackRefZ , (pre+"daughters_trackRefZ["+pre+"njet][200]/F").c_str() ) ;
+          }
    }
 
 
@@ -195,6 +216,7 @@ void JetBranches::fill(const EVENT::LCCollection* col, EVENT::LCEvent* evt )
 	  _otag[ i ] = 0 ;
 	  _njetpfo[ i ] = 0 ;
 	  _ndaughters[ i ] = 0;
+	  _ndaughters_stored[ i ] = 0;
 	  _ntracks[ i ] = 0;
 	  _nclusters[ i ] = 0;
 
@@ -212,6 +234,24 @@ void JetBranches::fill(const EVENT::LCCollection* col, EVENT::LCEvent* evt )
                _daughters_trackOmega[ i ][ j ] = 0.;
                _daughters_trackZ0[ i ][ j ] = 0.;
                _daughters_trackTanLambda[ i ][ j ] = 0.;
+               // The uncertainty arrays MUST be reset too. The previous code
+               // omitted them, so a constituent with no track kept whatever the
+               // same [jet][daughter] slot held in an earlier event; 76% of
+               // neutral constituents in the 10 TeV production carry such stale
+               // values.
+               _daughters_trackVarD0[ i ][ j ] = 0.;
+               _daughters_trackVarPhi[ i ][ j ] = 0.;
+               _daughters_trackVarOmega[ i ][ j ] = 0.;
+               _daughters_trackVarZ0[ i ][ j ] = 0.;
+               _daughters_trackVarTanLambda[ i ][ j ] = 0.;
+               if (_writeDaughtersCovariance) {
+                  for ( size_t k = 0; k < 15 ; ++k ) {
+                     _daughters_trackCov[ i ][ j ][ k ] = 0. ;
+                  }
+                  _daughters_trackRefX[ i ][ j ] = 0. ;
+                  _daughters_trackRefY[ i ][ j ] = 0. ;
+                  _daughters_trackRefZ[ i ][ j ] = 0. ;
+               }
       }
     }   
   }
@@ -298,6 +338,7 @@ void JetBranches::fill(const EVENT::LCCollection* col, EVENT::LCEvent* evt )
        int ntracks=0;
        int nclusters=0;
        int nparticles = std::min<int>( particles.size() , LCT_JET_PARTICLES_MAX ); // check array limit ...
+       _ndaughters_stored[ i ] = nparticles ; // < _ndaughters[i] when the jet was truncated
 
        for( int partid = 0 ; partid < nparticles ; ++partid ) {
          _daughters_PX[ i ][ partid ] = particles[partid]->getMomentum()[0] ;
@@ -318,8 +359,31 @@ void JetBranches::fill(const EVENT::LCCollection* col, EVENT::LCEvent* evt )
 		       _daughters_trackOmega[ i ][ partid ] = tracks[0]->getOmega();
 		       _daughters_trackZ0[ i ][ partid ] = tracks[0]->getZ0();
 		       _daughters_trackTanLambda[ i ][ partid ] = tracks[0]->getTanLambda();
-           _daughters_trackSigmaD0[ i ][ partid ] = tracks[0]->getCovMatrix()[0];
-           _daughters_trackSigmaZ0[ i ][ partid ] = tracks[0]->getCovMatrix()[2];
+           // Diagonal of the LCIO covariance, packed lower-triangle over
+           // ( d0, phi, omega, z0, tanLambda ) -> diagonal at 0, 2, 5, 9, 14.
+           // See lcio EVENT/TrackState.h:72-76 (quoted in JetBranches.h).
+           // These are VARIANCES; the consumer takes the square root.
+           _daughters_trackVarD0[ i ][ partid ]        = tracks[0]->getCovMatrix()[ 0];
+           _daughters_trackVarPhi[ i ][ partid ]       = tracks[0]->getCovMatrix()[ 2];
+           _daughters_trackVarOmega[ i ][ partid ]     = tracks[0]->getCovMatrix()[ 5];
+           _daughters_trackVarZ0[ i ][ partid ]        = tracks[0]->getCovMatrix()[ 9];
+           _daughters_trackVarTanLambda[ i ][ partid ] = tracks[0]->getCovMatrix()[14];
+
+           // Diagnostic: store the covariance matrix unreduced, plus the point
+           // the track parameters are expressed with respect to.
+           if (_writeDaughtersCovariance) {
+              const EVENT::FloatVec& cov = tracks[0]->getCovMatrix() ;
+              const unsigned ncov = std::min<unsigned>( cov.size() , 15 ) ;
+              for( unsigned k = 0 ; k < ncov ; ++k ) {
+                 _daughters_trackCov[ i ][ partid ][ k ] = cov[k] ;
+              }
+              const float* refp = tracks[0]->getReferencePoint() ;
+              if ( refp ) {
+                 _daughters_trackRefX[ i ][ partid ] = refp[0] ;
+                 _daughters_trackRefY[ i ][ partid ] = refp[1] ;
+                 _daughters_trackRefZ[ i ][ partid ] = refp[2] ;
+              }
+           }
 	       }
 
       }

@@ -150,6 +150,12 @@ LCTuple::LCTuple() : Processor("LCTuple") {
                               _jetColDaughtersParameters ,
                               false
                               );  
+
+  registerProcessorParameter( "JetCollectionDaughtersCovariance" ,
+                              "Switch to write out the full 15 element track covariance matrix, the track reference point and ndaughters_stored for each jet daughter (diagnostic, requires JetCollectionDaughtersParameters)",
+                              _jetColDaughtersCovariance ,
+                              false
+                              );
 			     
 registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
 			   "IsoLepCollection" , 
@@ -394,6 +400,7 @@ void LCTuple::init() {
 	_jetBranches->writeExtraParameters(_jetColExtraParameters); /* pass the value to JetBranches */
 	_jetBranches->writeTaggingParameters(_jetColTaggingParameters); /* pass the value to JetBranches */
 	_jetBranches->writeDaughtersParameters(_jetColDaughtersParameters);
+	_jetBranches->writeDaughtersCovariance(_jetColDaughtersCovariance);
     _jetBranches->initBranches( _tree );
   }
 

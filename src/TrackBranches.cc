@@ -44,11 +44,11 @@ void TrackBranches::initBranches( TTree* tree, const std::string& pre){
   tree->Branch( (pre+"trtout").c_str() , _trtout , (pre+"trtout["+pre+"ntrk]/I").c_str() ) ;
 
   // tree->Branch( (pre+"trcov").c_str() , _trcov , (pre+"trcov["+pre+"ntrk][15]/F").c_str() ) ;
-  tree->Branch( (pre+"trk_sigmal0").c_str() , _trk_sigmal0 , (pre+"trk_sigmal0["+pre+"ntrk]/F").c_str() ) ;
-  tree->Branch( (pre+"trk_sigmal1").c_str() , _trk_sigmal1 , (pre+"trk_sigmal1["+pre+"ntrk]/F").c_str() ) ;
-  tree->Branch( (pre+"trk_sigmaphi").c_str() , _trk_sigmaphi , (pre+"trk_sigmaphi["+pre+"ntrk]/F").c_str() ) ;
-  tree->Branch( (pre+"trk_sigmatheta").c_str() , _trk_sigmatheta , (pre+"trk_sigmatheta["+pre+"ntrk]/F").c_str() ) ;
-  tree->Branch( (pre+"trk_sigmaqoverp").c_str() , _trk_sigmaqoverp , (pre+"trk_sigmaqoverp["+pre+"ntrk]/F").c_str() ) ;
+  tree->Branch( (pre+"trk_varD0").c_str() , _trk_varD0 , (pre+"trk_varD0["+pre+"ntrk]/F").c_str() ) ;
+  tree->Branch( (pre+"trk_varPhi").c_str() , _trk_varPhi , (pre+"trk_varPhi["+pre+"ntrk]/F").c_str() ) ;
+  tree->Branch( (pre+"trk_varOmega").c_str() , _trk_varOmega , (pre+"trk_varOmega["+pre+"ntrk]/F").c_str() ) ;
+  tree->Branch( (pre+"trk_varZ0").c_str() , _trk_varZ0 , (pre+"trk_varZ0["+pre+"ntrk]/F").c_str() ) ;
+  tree->Branch( (pre+"trk_varTanLambda").c_str() , _trk_varTanLambda , (pre+"trk_varTanLambda["+pre+"ntrk]/F").c_str() ) ;
 
   if (_writeTrkStatesParameters) {
     tree->Branch( (pre+"trfts").c_str() , _trfts , (pre+"trfts["+pre+"ntrk]/I").c_str() ) ;
@@ -154,6 +154,18 @@ void TrackBranches::fill(const EVENT::LCCollection* col, EVENT::LCEvent* evt ){
       _trdze[ i ] = ts->getD0() ;
       _trzze[ i ] = ts->getZ0() ;
       _trphi[ i ] = ts->getPhi() ;
+
+      // Diagonal of the packed lower-triangle covariance over
+      // ( d0, phi, omega, z0, tanLambda ) -> 0, 2, 5, 9, 14.
+      // lcio EVENT/TrackState.h:72-76 (quoted in TrackBranches.h). Variances.
+      // NB: these MUST stay inside the "if (ts)" guard - the previous code
+      // dereferenced ts here unconditionally, so a track with no AtIP state
+      // would segfault.
+      _trk_varD0[i]        = ts->getCovMatrix()[ 0];
+      _trk_varPhi[i]       = ts->getCovMatrix()[ 2];
+      _trk_varOmega[i]     = ts->getCovMatrix()[ 5];
+      _trk_varZ0[i]        = ts->getCovMatrix()[ 9];
+      _trk_varTanLambda[i] = ts->getCovMatrix()[14];
     } else {
       _trome[ i ] = -1;
       _trtnl[ i ] = -1;
@@ -161,20 +173,12 @@ void TrackBranches::fill(const EVENT::LCCollection* col, EVENT::LCEvent* evt ){
       _trdze[ i ] = -1;
       _trzze[ i ] = -1;
       _trphi[ i ] = -1;
+      _trk_varD0[i]        = -1;
+      _trk_varPhi[i]       = -1;
+      _trk_varOmega[i]     = -1;
+      _trk_varZ0[i]        = -1;
+      _trk_varTanLambda[i] = -1;
     }    
-
-    // save sigma values from the covariance matrix
-    /*
-    for(int j=0;j<15;++j){
-      _trcov[ i ][ j ] = ts->getCovMatrix()[j] ;
-    }
-    */
-    // save only diagonal values
-    _trk_sigmal0[i]     = ts->getCovMatrix()[0];
-    _trk_sigmal1[i]     = ts->getCovMatrix()[2];
-    _trk_sigmaphi[i]    = ts->getCovMatrix()[5];
-    _trk_sigmatheta[i]  = ts->getCovMatrix()[9];
-    _trk_sigmaqoverp[i] = ts->getCovMatrix()[14];
   
     if (_writeTrkStatesParameters) {
       _trfts[ i ] = ( _trnts[i]>0 ? trk->getTrackStates()[0]->ext<CollIndex>() -1  :  -1 )  ;

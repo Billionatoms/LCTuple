@@ -121,6 +121,7 @@ class LCTuple : public Processor {
   bool _jetColExtraParameters {};                 /* Enables writing extra jet parameters */
   bool _jetColTaggingParameters {};               /* Enables writing jet tagging parameters */
   bool _jetColDaughtersParameters {};
+  bool _jetColDaughtersCovariance {};             /* Enables the diagnostic daughter covariance / reference point branches */
 
   StringVec _relColNames {};
   StringVec _relPrefixes {};
