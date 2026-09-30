@@ -64,7 +64,8 @@ void VertexBranches::fill(const EVENT::LCCollection* col, EVENT::LCEvent* evt ){
 
     // additional parameters: chi2 of each track
     EVENT::FloatVec tracksChi = vtx->getParameters();
-    for(unsigned int j = 0; j < tracksChi.size(); j++){
+    for(int j = 0; j < 30; j++) _vttrchi[i][j] = 0.;
+    for(unsigned int j = 0; j < tracksChi.size() && j < 30; j++){
       _vttrchi[i][j] = tracksChi[j];
     }
   }

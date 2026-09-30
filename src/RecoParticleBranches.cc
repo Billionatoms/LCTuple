@@ -157,46 +157,51 @@ void RecoParticleBranches::fill(const EVENT::LCCollection* col, EVENT::LCEvent* 
       _rctrid[i][s] = -1;
     }
     
-    if(!colCluster) continue;
-    lcio::ClusterVec clusters = rec->getClusters();
-    lcio::Cluster* temp_clus = NULL;
+    // _rcclid/_rctrid hold 5 links per particle; _rcncl/_rcntr keep the true counts.
+    if(colCluster) {
+      lcio::ClusterVec clusters = rec->getClusters();
+      lcio::Cluster* temp_clus = NULL;
 
-    for(unsigned int c = 0; c < clusters.size(); c++){
+      for(unsigned int c = 0; c < clusters.size() && c < 5; c++){
 
-      for(int ccoll = 0; ccoll < colCluster->getNumberOfElements(); ccoll++){
+        for(int ccoll = 0; ccoll < colCluster->getNumberOfElements(); ccoll++){
 
-        if(std::find(usedClusters.begin(), usedClusters.end(), ccoll) != usedClusters.end() )
-          continue;
+          if(std::find(usedClusters.begin(), usedClusters.end(), ccoll) != usedClusters.end() )
+            continue;
 
-        temp_clus = static_cast<lcio::Cluster*>( colCluster->getElementAt(ccoll) );
+          temp_clus = static_cast<lcio::Cluster*>( colCluster->getElementAt(ccoll) );
         
-        if(temp_clus->id() != clusters[c]->id()) continue;
+          if(temp_clus->id() != clusters[c]->id()) continue;
 
-        _rcclid[i][c] = ccoll;
-        usedClusters.push_back(ccoll);
-        break;
+          _rcclid[i][c] = ccoll;
+          usedClusters.push_back(ccoll);
+          break;
+        }
       }
+
     }
 
-    if(!colTracks) continue;
-    lcio::TrackVec tracks = rec->getTracks();
-    lcio::Track* temp_trk = NULL;
+    if(colTracks) {
+      lcio::TrackVec tracks = rec->getTracks();
+      lcio::Track* temp_trk = NULL;
 
-    for(unsigned int t = 0; t < tracks.size(); t++){
+      for(unsigned int t = 0; t < tracks.size() && t < 5; t++){
 
-      for(int tcoll = 0; tcoll < colTracks->getNumberOfElements(); tcoll++){
+        for(int tcoll = 0; tcoll < colTracks->getNumberOfElements(); tcoll++){
 
-        if(std::find(usedTracks.begin(), usedTracks.end(), tcoll) != usedTracks.end() )
-          continue;
+          if(std::find(usedTracks.begin(), usedTracks.end(), tcoll) != usedTracks.end() )
+            continue;
 
-        temp_trk = static_cast<lcio::Track*>( colTracks->getElementAt(tcoll) );
+          temp_trk = static_cast<lcio::Track*>( colTracks->getElementAt(tcoll) );
         
-        if(temp_trk->id() != tracks[t]->id()) continue;
+          if(temp_trk->id() != tracks[t]->id()) continue;
 
-        _rctrid[i][t] = tcoll;
-        usedTracks.push_back(tcoll);
-        break;
+          _rctrid[i][t] = tcoll;
+          usedTracks.push_back(tcoll);
+          break;
+        }
       }
+
     }
 
     usedClusters.clear();

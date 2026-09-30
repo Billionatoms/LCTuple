@@ -109,6 +109,10 @@ void TrackBranches::fill(const EVENT::LCCollection* col, EVENT::LCEvent* evt ){
       }
     }
     _ntrst = tsV.size() ;
+    if( _ntrst > LCT_TRACKSTATE_MAX ) {
+      streamlog_out( WARNING ) << " " << _ntrst << " track states, only the first " << LCT_TRACKSTATE_MAX << " are written" << std::endl ;
+      _ntrst = LCT_TRACKSTATE_MAX ;
+    }
     streamlog_out( DEBUG ) <<  " total number of track states : " << _ntrst << std::endl  ; 
 
     //----------  fill the track states ---------------------------------------
