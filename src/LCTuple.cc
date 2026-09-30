@@ -100,6 +100,12 @@ LCTuple::LCTuple() : Processor("LCTuple") {
 			      _mcpColWriteParameters ,
 			      false
 			      );
+
+  registerProcessorParameter( "MCParticleMaxParticles" ,
+                              "Maximum number of MCParticles written per event (first N of the collection)",
+			      _mcpMaxParticles ,
+			      1000
+			      );
   
   registerInputCollection( LCIO::RECONSTRUCTEDPARTICLE,
 			   "RecoParticleCollection" , 
@@ -354,6 +360,7 @@ void LCTuple::init() {
   if( _mcpColName.size() )  {
     _mcpBranches =  new MCParticleBranches ;
     _mcpBranches->writeParameters(_mcpColWriteParameters);
+    _mcpBranches->setMaxParticles(_mcpMaxParticles);
     _mcpBranches->initBranches( _tree ) ;
   }
   

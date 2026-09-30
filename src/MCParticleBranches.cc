@@ -66,7 +66,8 @@ void MCParticleBranches::fill(const EVENT::LCCollection* col, EVENT::LCEvent* ev
   if (_writeparameters) CollectionBranches::fill(col, evt);
 
   _nmc  = col->getNumberOfElements() ;
-  int nmax = 500;
+  int nmax = _maxParticles;
+  if(nmax > LCT_MCPARTICLE_MAX) nmax = LCT_MCPARTICLE_MAX;
   if(_nmc > nmax) _nmc = nmax;
 
   for(int i=0 ; i < _nmc ; ++i){

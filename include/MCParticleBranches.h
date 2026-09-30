@@ -29,12 +29,15 @@ public:
   
   virtual void fill(const EVENT::LCCollection* col, EVENT::LCEvent* evt ) ;
   
+  virtual void setMaxParticles( int nmcp ) { _maxParticles = nmcp ; }
+
   virtual ~MCParticleBranches() {} ;
   
 
 private:
   
   int    _nmc  {} ;
+  int    _maxParticles { 1000 } ;
   int    _mcori[ LCT_MCPARTICLE_MAX ] {};
   int    _mcpdg[ LCT_MCPARTICLE_MAX ] {};
   int    _mcgst[ LCT_MCPARTICLE_MAX ] {};

@@ -11,6 +11,7 @@
 #include "TrackBranches.h"
 #include "PIDBranches.h"
 #include "RecoParticleBranches.h"
+#include "MCParticleBranches.h"
 
 
 using namespace lcio ;
@@ -102,6 +103,7 @@ class LCTuple : public Processor {
 
 
   bool _mcpColWriteParameters {};
+  int  _mcpMaxParticles {};
   bool _recColWriteParameters {};
   bool _jetColWriteParameters {};
   bool _isolepColWriteParameters {}; 
@@ -128,7 +130,7 @@ class LCTuple : public Processor {
   TTree* _tree {};
 
   CWBranchesSet* _evtBranches {};
-  CollectionBranches* _mcpBranches {};
+  MCParticleBranches* _mcpBranches {};
   CollectionBranches* _mcpremoveoverlayBranches {};
   RecoParticleBranches* _recBranches {};
 //  CollectionBranches* _jetBranches {};
