@@ -109,7 +109,7 @@ void JetBranches::initBranches( TTree* tree, const std::string& pre){
           tree->Branch( (pre+"daughters_PZ").c_str(), _daughters_PZ , (pre+"daughters_PZ["+pre+"njet][200]/F").c_str() ) ;
           tree->Branch( (pre+"daughters_E").c_str(), _daughters_E , (pre+"daughters_E["+pre+"njet][200]/F").c_str() ) ;
           tree->Branch( (pre+"daughters_M").c_str(), _daughters_M , (pre+"daughters_M["+pre+"njet][200]/F").c_str() ) ;
-          tree->Branch( (pre+"daughters_Q").c_str(), _daughters_Q , (pre+"daughters_Q["+pre+"njet][200]/I").c_str() ) ;
+          tree->Branch( (pre+"daughters_Q").c_str(), _daughters_Q , (pre+"daughters_Q["+pre+"njet][200]/F").c_str() ) ;
           tree->Branch( (pre+"daughters_trackD0").c_str(), _daughters_trackD0 , (pre+"daughters_trackD0["+pre+"njet][200]/F").c_str() ) ;
           tree->Branch( (pre+"daughters_trackPhi").c_str(), _daughters_trackPhi , (pre+"daughters_trackPhi["+pre+"njet][200]/F").c_str() ) ;
           tree->Branch( (pre+"daughters_trackOmega").c_str(), _daughters_trackOmega , (pre+"daughters_trackOmega["+pre+"njet][200]/F").c_str() ) ;
