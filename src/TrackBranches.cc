@@ -106,6 +106,9 @@ void TrackBranches::fill(const EVENT::LCCollection* col, EVENT::LCEvent* evt ){
       const EVENT::TrackStateVec & tss = trk->getTrackStates() ;
       for (int j=0, nts = tss.size() ; j<nts ; ++j) {
         tsV.push_back( tss[j] ) ;
+        // Number the state so that trfts/trsip/trsfh/trslh/trsca can point at it.
+        // States past the array limit are not written and get no number (index -1).
+        if( (int) tsV.size() <= LCT_TRACKSTATE_MAX ) tss[j]->ext<CollIndex>() = tsV.size() ;
       }
     }
     _ntrst = tsV.size() ;
